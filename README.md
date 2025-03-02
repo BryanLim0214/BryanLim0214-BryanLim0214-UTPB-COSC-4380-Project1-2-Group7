@@ -98,16 +98,6 @@ String bestSentence = LlamaSentenceChecker.findMostLikelySentence(possibleDecryp
 
 ---
 
-## 👨‍💻 Contributing
-We welcome contributions! If you'd like to improve the project:
-1. **Fork** the repository.
-2. Create a **feature branch** (`git checkout -b feature-xyz`).
-3. **Commit** your changes (`git commit -m "Added new feature"`).
-4. **Push** to GitHub (`git push origin feature-xyz`).
-5. Open a **pull request**!
-
----
-
 ## 📜 License
 This project is open-source and available under the **MIT License**.
 
