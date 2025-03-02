@@ -1,6 +1,8 @@
 
 # UTPB-COSC-4380-Project1-2-Group7
 
+# Group 7: Alejandro Sotelo, Bryan Lim, Roman Huerta
+
 ## 📜 Project Overview
 This project is a collection of cipher algorithms implemented in **Java**, designed to **encrypt, decrypt, and crack ciphers** using various cryptographic techniques. It includes implementations of **PolyAlphabetic Cipher**, **Columnar Transposition Cipher**, and a **Llama-based Sentence Checker** for analyzing decrypted text.
 
