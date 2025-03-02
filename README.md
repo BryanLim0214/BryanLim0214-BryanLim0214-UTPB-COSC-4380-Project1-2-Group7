@@ -1,6 +1,3 @@
-Here is a **README.md** file for your GitHub repository based on the analysis of your project:
-
----
 
 # UTPB-COSC-4380-Project1-2-Group7
 
