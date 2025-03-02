@@ -107,5 +107,3 @@ This project is open-source and available under the **MIT License**.
 For questions or feedback, please open an **Issue** or contact **@BryanLim0214** on GitHub.
 
 ---
-
-Would you like any modifications to the README? 😊
