@@ -1,3 +1,5 @@
+// LlamaSentenceChecker.java
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -36,14 +38,14 @@ public class LlamaSentenceChecker {
     }
 
     /**
-     * Sends a list of possible decrypted texts to the Llama model and asks it
-     * to identify which one is most likely to be a valid English sentence.
+     * Sends a list of possible decrypted texts with their keys to the Llama model
+     * and asks it to identify which one is most likely to be a valid English sentence.
      *
-     * @param texts A list of potential plaintext decryptions to evaluate
-     * @return The model's response containing the best sentence and confidence score
+     * @param textsWithKeys A map of potential plaintext decryptions to their corresponding keys
+     * @return The model's response containing the best sentence and its key
      * @throws IOException If there's an error communicating with the API
      */
-    public static String findMostLikelySentence(List<String> texts) throws IOException {
+    public static String findMostLikelySentenceWithKey(Map<String, String> textsWithKeys) throws IOException {
         // Set up the HTTP connection to OpenRouter
         HttpURLConnection conn = (HttpURLConnection) new URL(API_URL).openConnection();
         conn.setRequestMethod("POST");
@@ -52,10 +54,10 @@ public class LlamaSentenceChecker {
         conn.setDoOutput(true);
 
         // Build the prompt for the AI model
-        StringBuilder prompt = new StringBuilder("Analyze the list of decrypted words. Identify the most meaningful sentence. Even if the input is slightly incorrect or lacks spacing, try to reconstruct the best possible English phrase. Output ONLY:\n\n**Best Sentence: [BEST_SENTENCE] (Confidence: XX%)**\n\nList:\n");
+        StringBuilder prompt = new StringBuilder("Analyze the list of decrypted texts. Identify the most meaningful English sentence. Even if the input is slightly incorrect or lacks spacing, try to reconstruct the best possible English phrase or common english word. Output ONLY:\n\n**Best Sentence/word: [BEST_SENTENCE/BEST_WORD] (Key: [KEY]) (Confidence: XX%)**\n\nList:\n");
 
-        for (String text : texts) {
-            prompt.append("- ").append(text).append("\n");
+        for (Map.Entry<String, String> entry : textsWithKeys.entrySet()) {
+            prompt.append("- Text: ").append(entry.getKey()).append(" (Key: ").append(entry.getValue()).append(")\n");
         }
 
         // Construct the JSON payload for OpenRouter
@@ -80,6 +82,29 @@ public class LlamaSentenceChecker {
         }
         reader.close();
 
-        return response.toString().replaceAll(".*Best Sentence: ", "").replace("**", "").trim();
+        // Extract the content from the JSON response
+        String jsonResponse = response.toString();
+        int contentStart = jsonResponse.indexOf("\"content\":") + 11;
+        int contentEnd = jsonResponse.indexOf("\"", contentStart);
+        String content = jsonResponse.substring(contentStart, contentEnd);
+
+        // Extract the best sentence part from the content
+        if (content.contains("Best Sentence:")) {
+            return content.substring(content.indexOf("Best Sentence:"));
+        } else {
+            return "Error: Could not find 'Best Sentence:' in response";
+        }
+    }
+
+    /**
+     * Original method for backward compatibility
+     */
+    public static String findMostLikelySentence(List<String> texts) throws IOException {
+        // Convert list to map with empty keys for backward compatibility
+        Map<String, String> textsWithKeys = new HashMap<>();
+        for (String text : texts) {
+            textsWithKeys.put(text, "N/A");
+        }
+        return findMostLikelySentenceWithKey(textsWithKeys);
     }
 }
