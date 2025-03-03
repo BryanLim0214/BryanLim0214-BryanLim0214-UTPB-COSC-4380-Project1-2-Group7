@@ -25,6 +25,7 @@ public class ColumnarTranspositionCracker {
         System.out.println("  Columnar Transposition Cracker Tool  ");
         System.out.println("=======================================");
         System.out.println("  NOTE: This tool works best for key sizes 6 and under.");
+        System.out.println("  Works best with ENGLISH SENTENCES");
         System.out.println("  Larger key sizes will result in extremely long");
         System.out.println("  processing times due to the number of permutations.");
         System.out.println("=======================================");
@@ -178,32 +179,52 @@ public class ColumnarTranspositionCracker {
         System.out.println("=== Evaluating Decrypted Words Using LlamaSentenceChecker ===");
         System.out.println("===============================================");
 
+        // Create a map of decrypted texts to their corresponding keys
+        Map<String, String> textsWithKeys = new HashMap<>();
+        for (int i = 0; i < allDecryptedWords.size(); i++) {
+            textsWithKeys.put(allDecryptedWords.get(i), keyMappings.get(i).toString());
+        }
+
         String llamaResponse;
         try {
-            // Use LLM to evaluate the most likely correct sentence
-            llamaResponse = LlamaSentenceChecker.findMostLikelySentence(allDecryptedWords);
+            // Use LLM to evaluate the most likely correct sentence, now including keys
+            llamaResponse = LlamaSentenceChecker.findMostLikelySentenceWithKey(textsWithKeys);
         } catch (IOException e) {
             System.err.println("Error communicating with Llama API: " + e.getMessage());
             llamaResponse = "Error retrieving response"; // Fallback in case of API failure
         }
 
-        // Extract and format the LLM's chosen sentence
-        String formattedLlamaSentence = llamaResponse.replaceAll(".*?\\*\\*(.*?)\\*\\*.*", "$1")
-                .replaceAll("\\s+", "") // Remove spaces for comparison
-                .toLowerCase();
-
         // Display the LLM's result
         System.out.println("\n===============================================");
         System.out.println("=== Best Decryption Based on LlamaSentenceChecker ===");
         System.out.println("===============================================");
-        System.out.println("Best Possible Decryption: " + llamaResponse);
 
-        // Find the key that corresponds to the LLM's chosen sentence
-        for (int i = 0; i < formattedDecryptedWords.size(); i++) {
-            if (formattedDecryptedWords.get(i).contains(formattedLlamaSentence)) {
-                System.out.println("Key Associated with LlamaSentenceChecker: " + keyMappings.get(i));
-                break;
+        // Parse the response to extract both the sentence and key
+        String bestSentence = "";
+        String bestKey = "";
+
+        // Extract the best sentence and key from the LLM response
+        if (llamaResponse.contains("(Key:") && llamaResponse.contains(")")) {
+            bestSentence = llamaResponse.substring(0, llamaResponse.indexOf("(Key:")).trim();
+            bestKey = llamaResponse.substring(
+                    llamaResponse.indexOf("(Key:") + 5,
+                    llamaResponse.indexOf(")", llamaResponse.indexOf("(Key:"))
+            ).trim();
+
+            System.out.println("Best Possible Decryption: " + bestSentence);
+            System.out.println("Key Associated with Best Decryption: " + bestKey);
+
+            // Find the full decryption that matches this sentence
+            for (int i = 0; i < allDecryptedWords.size(); i++) {
+                if (allDecryptedWords.get(i).contains(bestSentence)) {
+                    System.out.println("Full Decrypted Text: " + allDecryptedWords.get(i));
+                    System.out.printf("Dictionary Score: %.4f\n", dictionaryScores.get(i));
+                    break;
+                }
             }
+        } else {
+            // Fallback if response format is unexpected
+            System.out.println("Unexpected response format from LLM: " + llamaResponse);
         }
     }
 
@@ -341,7 +362,6 @@ public class ColumnarTranspositionCracker {
     private static void printColumnHeaders(List<Integer> key) {
         System.out.println("\n=== Column Order (Key): " + key + " ===");
     }
-
     /**
      * Print the decryption grid for visualization
      */
@@ -373,3 +393,4 @@ public class ColumnarTranspositionCracker {
         }
     }
 }
+   
